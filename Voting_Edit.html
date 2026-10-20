@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCE - CR Voting System</title> 
+    <style>
+        /* --- NEW VIBRANT UI STYLES --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --success-color: #11998e;
+            --error-color: #c53030;
+            --light-bg: #ffffff;
+            --dark-text: #2d3748;
+            --container-bg: rgba(255, 255, 255, 0.75);
+            --card-bg: rgba(255, 255, 255, 0.5);
+            --table-bg: #ffffff;
+            --table-header-bg: #f8f9fa;
+        }
+        
+        body.dark-mode {
+            --primary-color: #9f7aea;
+            --secondary-color: #63b3ed;
+            --success-color: #2ed573;
+            --error-color: #fc8181;
+            --light-bg: #1a202c;
+            --dark-text: #f7fafc;
+            --container-bg: rgba(45, 55, 72, 0.75);
+            --card-bg: rgba(74, 85, 104, 0.5);
+            --table-bg: #2d3748;
+            --table-header-bg: #4a5568;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--dark-text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* Animated Gradient Background */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body.dark-mode {
+             background: #1a202c;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            /* Enhanced Glassmorphism Effect */
+            background: var(--container-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .header {
+            /* Gradient Header */
+            background-image: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+        .header p { margin: 4px 0 0; opacity: 0.9; }
+
+        .main-content { padding: 24px; }
+        .section { margin-bottom: 24px; }
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--dark-text);
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .candidates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        .candidate-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.3s ease;
+        }
+        .candidate-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        .candidate-card.selected {
+            border-color: var(--secondary-color);
+            background-color: #e9f2fe;
+            box-shadow: 0 0 15px rgba(37, 117, 252, 0.5);
+        }
+        body.dark-mode .candidate-card.selected {
+            background-color: rgba(99, 179, 237, 0.2);
+        }
+
+        .candidate-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .candidate-name { font-weight: 600; font-size: 1.1rem; }
+
+        .form-input {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--dark-text);
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        body.dark-mode .form-input {
+            border-color: rgba(255,255,255,0.2);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(37, 117, 252, 0.4);
+        }
+
+        .btn {
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s ease;
+            background-size: 200% auto;
+        }
+        .btn:hover:not(:disabled) {
+             background-position: right center;
+             transform: translateY(-2px);
+             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+            background-image: none;
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Gradient Button Styles */
+        .btn-primary { background-image: linear-gradient(to right, var(--secondary-color) 0%, var(--primary-color) 51%, var(--secondary-color) 100%); }
+        .btn-results { background-image: linear-gradient(to right, #11998e 0%, #38ef7d 51%, #11998e 100%); }
+        .btn-secondary { background-image: linear-gradient(to right, #868e96 0%, #495057 51%, #868e96 100%); }
+        .btn-danger { background-image: linear-gradient(to right, #e52d27 0%, #b31217 51%, #e52d27 100%); }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: var(--table-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+        .results-table th, .results-table td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        body.dark-mode .results-table th, body.dark-mode .results-table td {
+             border-bottom: 1px solid #4a5568;
+        }
+        .results-table th { 
+            background-color: var(--table-header-bg);
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .results-table tr:first-child td { font-weight: bold; color: var(--success-color); }
+        
+        #status-message-container{
+            padding: 0 24px;
+            margin-top: -16px;
+            margin-bottom: 16px;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .status-success { background-color: #d4edda; color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-error { background-color: #f8d7da; color: var(--error-color); border: 1px solid var(--error-color); }
+        body.dark-mode .status-success { background-color: rgba(46, 213, 115, 0.2); }
+        body.dark-mode .status-error { background-color: rgba(252, 129, 129, 0.2); }
+
+        /* --- Theme Toggle Switch --- */
+        .theme-switch-wrapper {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            -webkit-transition: .4s;
+            transition: .4s;
+            display: flex;
+            align-items: center;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        /* Icons inside slider */
+        .slider .sun-icon, .slider .moon-icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: opacity 0.3s ease;
+        }
+        .slider .sun-icon {
+            left: 7px;
+            opacity: 1;
+            color: #f39c12;
+        }
+        .slider .moon-icon {
+            right: 7px;
+            opacity: 0;
+            color: white;
+        }
+        input:checked + .slider .sun-icon {
+            opacity: 0;
+        }
+        input:checked + .slider .moon-icon {
+            opacity: 1;
+        }
+        
+        /* --- Winner Reveal & Confirmation Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            position: relative;
+        }
+        #suspense-text {
+            font-size: 2rem;
+            font-weight: 600;
+            animation: drumroll 0.5s infinite;
+        }
+        @keyframes drumroll {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-2deg); }
+            75% { transform: translateX(5px) rotate(2deg); }
+        }
+        #winner-reveal {
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #winner-reveal.revealed {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #winner-name {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #ffd700; /* Gold */
+            text-shadow: 0 0 15px #ffd700;
+            margin: 10px 0;
+        }
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #f00;
+            opacity: 0.7;
+            animation: fall 5s linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+             <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="theme-checkbox" title="Toggle Theme">
+                    <input type="checkbox" id="theme-checkbox" />
+                    <div class="slider round">
+                        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </div>
+                </label>
+            </div>
+            <h1>Dilkap engineering College</h1>
+            <p>Class Representative (CR) Voting System</p>
+        </header>
+
+        <div id="status-message-container">
+            <div id="status-message" class="status-message" style="display: none;"></div>
+        </div>
+
+        <div id="login-section" class="main-content">
+            <section class="section">
+                <h2 class="section-title">Voter Authentication</h2>
+                <p style="text-align:center; margin-bottom: 20px;">Please enter your Name and Unique Voting No. to proceed.</p>
+                
+                <input type="text" id="voter-name-input" class="form-input" placeholder="Enter your Full Name">
+                
+                <input type="text" id="voter-no-input" class="form-input" placeholder="Enter your Unique Voting No. (e.g., 1001)">
+                
+                <div id="admin-password-container" style="display: none;">
+                    <input type="password" id="admin-password-input" class="form-input" placeholder="Enter Admin Password">
+                </div>
+                <button id="login-btn" class="btn btn-primary">Login</button>
+            </section>
+        </div>
+
+        <main id="voting-section" class="main-content" style="display: none;">
+            <section class="section">
+                <h2 class="section-title">Cast Your Vote</h2>
+                <div id="candidates-grid" class="candidates-grid">
+                    </div>
+                <input type="hidden" id="selected-candidate" value="">
+                <button id="vote-btn" class="btn btn-primary" style="margin-top: 20px;" disabled>Select a Candidate to Vote</button>
+            </section>
+        </main>
+
+        <div id="admin-section" class="main-content" style="display: none;">
+            <section class="section">
+                <h2 class="section-title">Admin Panel - Live Results</h2>
+                <button id="results-btn" class="btn btn-results">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+                    <span>View Updated Results</span>
+                </button>
+                <div id="results-container">
+                     <p style="text-align: center; color: #666; padding: 10px;">Click the button to view live results.</p>
+                </div>
+            </section>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="clear-votes-btn" class="btn btn-danger">Clear All Votes</button>
+                <button id="admin-logout-btn" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+
+    </div>
+    
+    <div id="winner-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="confetti-container"></div>
+            <div id="suspense-text">Announcing the results...</div>
+            <div id="winner-reveal" style="display: none;">
+                <p style="font-size: 1.5rem;">The new CR is...</p>
+                <h2 id="winner-name"></h2>
+                <button id="close-winner-modal-btn" class="btn btn-primary" style="margin-top: 20px; display: inline-block; width: auto; padding: 10px 30px;">Show Full Results</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal-overlay" class="modal-overlay">
+        <div class="modal-content" style="background: var(--light-bg); padding: 24px; border-radius: 15px; color: var(--dark-text); max-width: 400px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);">
+            <h2 id="confirm-modal-title" style="color: var(--dark-text); margin-top: 0; font-size: 20px;">Confirm Action</h2>
+            <p id="confirm-modal-text" style="opacity: 0.9;">Are you sure you want to clear all votes? This action cannot be undone.</p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+                 <button id="confirm-cancel-btn" class="btn btn-secondary" style="width: auto; padding: 10px 20px;">Cancel</button>
+                 <button id="confirm-ok-btn" class="btn btn-danger" style="width: auto; padding: 10px 20px;">Yes, Clear Votes</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- START OF JAVASCRIPT BLOCKCHAIN IMPLEMENTATION ---
+
+        async function sha256(data) {
+            const textAsBuffer = new TextEncoder().encode(data);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', textAsBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        class Block {
+            constructor(data, previousHash = '') {
+                this.timeStamp = new Date().getTime();
+                this.data = data; 
+                this.previousHash = previousHash;
+                this.hash = '';
+                this.nonce = 0; 
+            }
+
+            async calculateHash() {
+                const input = this.previousHash + this.timeStamp + JSON.stringify(this.data) + this.nonce;
+                return await sha256(input);
+            }
+
+            async mineBlock(difficulty) {
+                const target = '0'.repeat(difficulty);
+                this.hash = await this.calculateHash(); 
+                while (this.hash.substring(0, difficulty) !== target) {
+                    this.nonce++;
+                    this.hash = await this.calculateHash();
+                }
+                console.log("BLOCK MINED: " + this.hash);
+            }
+        }
+
+        class Blockchain {
+            constructor() {
+                this.chain = [];
+                this.difficulty = 2; 
+            }
+
+            async createGenesisBlock() {
+                const genesisBlock = new Block("Genesis Block", "0");
+                await genesisBlock.mineBlock(this.difficulty);
+                this.chain.push(genesisBlock);
+            }
+
+            async resetChain() {
+                this.chain = [];
+                await this.createGenesisBlock();
+            }
+
+            getLatestBlock() {
+                return this.chain[this.chain.length - 1];
+            }
+
+            async addVote(voteData) {
+                const newBlock = new Block(voteData, this.getLatestBlock().hash);
+                await newBlock.mineBlock(this.difficulty);
+                this.chain.push(newBlock);
+            }
+
+            async isChainValid() {
+                for (let i = 1; i < this.chain.length; i++) {
+                    const currentBlock = this.chain[i];
+                    const previousBlock = this.chain[i - 1];
+                    if (currentBlock.hash !== await currentBlock.calculateHash()) {
+                        return false;
+                    }
+                    if (currentBlock.previousHash !== previousBlock.hash) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            getVoteResults() {
+                const voteCounts = {};
+                candidates.forEach(c => voteCounts[c.id] = 0);
+                
+                for (let i = 1; i < this.chain.length; i++) { 
+                    const candidateId = this.chain[i].data;
+                    if (voteCounts.hasOwnProperty(candidateId)) {
+                        voteCounts[candidateId]++;
+                    }
+                }
+                return voteCounts;
+            }
+        }
+        
+        // --- END OF BLOCKCHAIN IMPLEMENTATION ---
+
+
+        // --- UI AND APPLICATION LOGIC ---
+        const secureVoteChain = new Blockchain();
+
+        // --- DOM Elements ---
+        const loginSection = document.getElementById('login-section');
+        const votingSection = document.getElementById('voting-section');
+        const adminSection = document.getElementById('admin-section');
+        
+        // Inputs
+        const voterNameInput = document.getElementById('voter-name-input');
+        const voterNoInput = document.getElementById('voter-no-input');
+        
+        const adminPasswordContainer = document.getElementById('admin-password-container');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const loginBtn = document.getElementById('login-btn');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+        const clearVotesBtn = document.getElementById('clear-votes-btn');
+
+        // Initialize the UI elements
+        const candidatesGrid = document.getElementById('candidates-grid');
+        const selectedCandidateInput = document.getElementById('selected-candidate');
+        const voteBtn = document.getElementById('vote-btn');
+        const resultsBtn = document.getElementById('results-btn');
+        const statusMessage = document.getElementById('status-message');
+        const themeCheckbox = document.getElementById('theme-checkbox');
+        const resultsContainer = document.getElementById('results-container');
+
+        // Modals
+        const winnerModal = document.getElementById('winner-modal');
+        const suspenseText = document.getElementById('suspense-text');
+        const winnerReveal = document.getElementById('winner-reveal');
+        const winnerNameEl = document.getElementById('winner-name');
+        const closeWinnerModalBtn = document.getElementById('close-winner-modal-btn');
+        const confirmModal = document.getElementById('confirm-modal-overlay');
+        const confirmOkBtn = document.getElementById('confirm-ok-btn');
+        const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+        
+        // --- App State & Data ---
+        let currentVoterId = null;
+        let currentVoterName = null;
+
+        const ADMIN_ID = "ADMIN";
+        const ADMIN_PASS = "RESULT";
+
+        const candidates = [
+            { id: "CANDIDATE_A", name: "Nikhil" },
+            { id: "CANDIDATE_B", name: "Akshay" },
+            { id: "CANDIDATE_C", name: "Tushar" },
+        ];
+        
+        let selectedCandidateCard = null;
+
+        function renderCandidates() {
+            candidatesGrid.innerHTML = '';
+            candidates.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'candidate-card';
+                card.dataset.candidateId = c.id;
+                card.innerHTML = `
+                    <img src="https://placehold.co/100x100/EFEFEF/333333?text=${c.name.charAt(0)}" alt="${c.name}">
+                    <div class="candidate-name">${c.name}</div>
+                `;
+                card.addEventListener('click', () => selectCandidate(c.id, card));
+                candidatesGrid.appendChild(card);
+            });
+        }
+
+        function selectCandidate(candidateId, cardElement) {
+            if (selectedCandidateCard) {
+                selectedCandidateCard.classList.remove('selected');
+            }
+            cardElement.classList.add('selected');
+            selectedCandidateCard = cardElement;
+            selectedCandidateInput.value = candidateId;
+            voteBtn.disabled = false;
+            voteBtn.innerHTML = `<span>Vote for ${candidates.find(c => c.id === candidateId).name}</span>`;
+        }
+
+        async function handleLogin() {
+            const voterName = voterNameInput.value.trim();
+            const voterNo = voterNoInput.value.trim().toUpperCase();
+
+            // Admin Login Check
+            if (voterNo === ADMIN_ID) {
+                const password = adminPasswordInput.value;
+                if (password === ADMIN_PASS) {
+                    loginSection.style.display = 'none';
+                    adminSection.style.display = 'block';
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 10px;">Click the button to view live results.</p>';
+                } else { 
+                    showStatus('Incorrect Admin Password.', 'error');
+                }
+                adminPasswordInput.value = ''; 
+                return;
+            }
+
+            // Ensure both Name and Voting Number are filled out
+            if (!voterName || !voterNo) {
+                showStatus('Please enter both your Name and your Unique Voting No.', 'error');
+                return;
+            }
+
+            // Validate that they entered a number for the Voting No
+            if (!/^\d+$/.test(voterNo)) {
+                showStatus('Your Unique Voting No. must be a number (e.g., 1001, 1002).', 'error');
+                return;
+            }
+
+            // Check if this exact number has voted already in our memory
+            if (localStorage.getItem(`voted_${voterNo}`)) {
+                showStatus('Error: A vote has already been cast using this Unique Voting No.', 'error');
+                return;
+            }
+            
+            currentVoterId = voterNo;
+            currentVoterName = voterName;
+
+            loginSection.style.display = 'none';
+            votingSection.style.display = 'block';
+
+            showStatus(`Welcome, ${currentVoterName}! You can now cast your vote.`, 'success');
+        }
+
+        async function castVote() {
+            const candidateId = selectedCandidateInput.value;
+            if (!candidateId) {
+                showStatus('Please select a candidate first.', 'error');
+                return;
+            }
+
+            voteBtn.disabled = true;
+            voteBtn.innerHTML = '<span>Mining your vote on the blockchain...</span>';
+
+            try {
+                await secureVoteChain.addVote(candidateId);
+                localStorage.setItem(`voted_${currentVoterId}`, 'true'); // Save the voting number to memory
+                showStatus('Thank you! Your vote has been securely recorded. You will be logged out automatically.', 'success');
+                
+                document.getElementById('candidates-grid').style.pointerEvents = 'none';
+                document.getElementById('candidates-grid').style.opacity = '0.6';
+                voteBtn.disabled = true;
+                voteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span>Your Vote is Final</span>`;
+                
+                setTimeout(handleLogout, 3000); 
+
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                voteBtn.disabled = false;
+                voteBtn.innerHTML = `<span>Vote for ${candidates.find(c => c.id === selectedCandidateInput.value).name}</span>`;
+            } 
+        }
+
+        function handleLogout() {
+            votingSection.style.display = 'none';
+            loginSection.style.display = 'block';
+            voterNameInput.value = ''; // Clear Name
+            voterNoInput.value = '';   // Clear Voting No
+            currentVoterId = null;
+            currentVoterName = null;
+            if (selectedCandidateCard) {
+                selectedCandidateCard.classList.remove('selected');
+                selectedCandidateCard = null;
+            }
+            selectedCandidateInput.value = '';
+            voteBtn.disabled = true;
+            voteBtn.innerHTML = '<span>Select a Candidate to Vote</span>';
+            document.getElementById('candidates-grid').style.pointerEvents = 'auto';
+            document.getElementById('candidates-grid').style.opacity = '1';
+        }
+
+        function handleAdminLogout() {
+            adminSection.style.display = 'none';
+            loginSection.style.display = 'block';
+            voterNameInput.value = ''; // Clear Name
+            voterNoInput.value = '';   // Clear Voting No
+            adminPasswordContainer.style.display = 'none';
+            adminPasswordInput.value = '';
+        }
+
+        async function getResults(buttonElement) {
+            if (!buttonElement) return;
+            const originalHTML = buttonElement.innerHTML;
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span>Validating and counting votes...</span>';
+            
+            try {
+                const results = secureVoteChain.getVoteResults();
+                const isChainValid = await secureVoteChain.isChainValid();
+                
+                const rankedCandidates = Object.entries(results)
+                    .map(([candidateId, votes]) => ({
+                        name: candidates.find(c => c.id === candidateId)?.name || 'Unknown',
+                        votes
+                    }))
+                    .sort((a, b) => b.votes - a.votes);
+
+                showWinnerAnnouncement(rankedCandidates, isChainValid, buttonElement, originalHTML, resultsContainer);
+
+            } catch (error) {
+                showStatus(`Could not get results: ${error.message}`, 'error');
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalHTML;
+            }
+        }
+
+        function renderResultsTable(rankedCandidates, isChainValid, targetContainer) {
+             let tableHtml = `
+                <table class="results-table">
+                    <thead><tr><th>Rank</th><th>Candidate</th><th>Votes</th></tr></thead>
+                    <tbody>`;
+            
+            rankedCandidates.forEach((candidate, index) => {
+                const rank = index + 1;
+                const rankDisplay = rank === 1 ? `🥇 ${rank}` : rank;
+                tableHtml += `<tr><td>${rankDisplay}</td><td>${candidate.name}</td><td>${candidate.votes}</td></tr>`;
+            });
+
+            tableHtml += '</tbody></table>';
+            tableHtml += `<p style="margin-top: 15px; text-align: center;">
+                             <strong>Chain Integrity:</strong> 
+                             <span style="color: ${isChainValid ? 'var(--success-color)' : 'var(--error-color)'}; font-weight: bold;">
+                                 ${isChainValid ? 'VALID' : 'COMPROMISED!'}
+                             </span>
+                          </p>`;
+            
+            if(targetContainer) {
+                targetContainer.innerHTML = tableHtml;
+            }
+        }
+        
+        function showWinnerAnnouncement(rankedCandidates, isChainValid, buttonElement, originalHTML, targetContainer) {
+            suspenseText.style.display = 'block';
+            winnerReveal.style.display = 'none';
+            winnerReveal.classList.remove('revealed');
+            winnerModal.classList.add('visible');
+
+            setTimeout(() => {
+                suspenseText.style.display = 'none';
+
+                if (rankedCandidates.length > 0 && rankedCandidates[0].votes > 0) {
+                    const maxVotes = rankedCandidates[0].votes;
+                    const winners = rankedCandidates.filter(candidate => candidate.votes === maxVotes);
+
+                    if (winners.length > 1) {
+                        winnerReveal.querySelector('p').textContent = 'The election is a draw! The winners are...';
+                        winnerNameEl.textContent = winners.map(w => w.name).join(', ');
+                    } else {
+                        winnerReveal.querySelector('p').textContent = 'The new CR is...';
+                        winnerNameEl.textContent = winners[0].name;
+                    }
+                    launchConfetti();
+
+                } else {
+                     winnerReveal.querySelector('p').textContent = 'Result';
+                     winnerNameEl.textContent = 'No votes have been cast yet';
+                }
+
+                winnerReveal.style.display = 'block';
+
+                setTimeout(() => {
+                    winnerReveal.classList.add('revealed');
+                }, 100);
+
+            }, 2500);
+
+            closeWinnerModalBtn.onclick = () => {
+                winnerModal.classList.remove('visible');
+                renderResultsTable(rankedCandidates, isChainValid, targetContainer);
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = originalHTML;
+                }
+            };
+        }
+
+        function launchConfetti() {
+            const confettiContainer = winnerModal.querySelector('.confetti-container');
+            confettiContainer.innerHTML = '';
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                confettiContainer.appendChild(confetti);
+            }
+        }
+        
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            setTimeout(() => { statusMessage.style.display = 'none'; }, 5000);
+        }
+
+        function switchTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        function clearAllVotes() {
+            confirmModal.classList.add('visible');
+
+            confirmOkBtn.onclick = async () => {
+                confirmModal.classList.remove('visible');
+                try {
+                    await secureVoteChain.resetChain();
+                    // Clear all memory keys that start with "voted_"
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('voted_')) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 10px;">All votes have been cleared. Ready for a new election.</p>';
+                    showStatus('All votes have been successfully cleared.', 'success');
+                } catch (error) {
+                    showStatus(`Error clearing votes: ${error.message}`, 'error');
+                }
+            };
+
+            confirmCancelBtn.onclick = () => {
+                confirmModal.classList.remove('visible');
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeCheckbox.checked = true;
+            }
+            renderCandidates();
+
+            voterNoInput.addEventListener('input', () => {
+                if (voterNoInput.value.trim().toUpperCase() === ADMIN_ID) {
+                    adminPasswordContainer.style.display = 'block';
+                    voterNameInput.style.display = 'none'; // Hide name field if admin
+                } else {
+                    adminPasswordContainer.style.display = 'none';
+                    voterNameInput.style.display = 'block'; // Show name field otherwise
+                }
+            });
+
+            const loginButton = document.getElementById('login-btn');
+            
+            try {
+                loginButton.disabled = true;
+                showStatus('Initializing the secure blockchain... please wait.', 'success');
+                
+                await secureVoteChain.createGenesisBlock();
+                
+                showStatus('Blockchain is ready. Please authenticate to vote.', 'success');
+                loginButton.disabled = false;
+            } catch (error) {
+                console.error("Initialization Error:", error);
+                showStatus(`Error during initialization: ${error.message}`, 'error');
+            }
+        });
+
+        loginBtn.addEventListener('click', handleLogin);
+        adminLogoutBtn.addEventListener('click', handleAdminLogout);
+        clearVotesBtn.addEventListener('click', clearAllVotes);
+        voteBtn.addEventListener('click', castVote);
+        resultsBtn.addEventListener('click', () => getResults(resultsBtn));
+        themeCheckbox.addEventListener('change', switchTheme);
+
+    </script>
+</body>
+</html>
